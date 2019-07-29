@@ -1,0 +1,1 @@
+serverRole:serverName:serverIP:serverNetMask:serverGateway:serverDNS1,...,serverDNS3:interface:ifcfg-template-file:append-template-file
