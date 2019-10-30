@@ -4,7 +4,7 @@ Util script to generate append-files for ignition configuration using [filetrans
 ## Usage
 Clone the repository
 ```bash
-# git clone https://github.com/spagno/ocp4-utils.git && cd ocp4-utls
+# git clone https://github.com/spagno/ocp4-utils.git && cd ocp4-utils
 ```
 Configure the `URL_IGNITION_FILES` parameter in the config file
 Prepare the servers.txt file (1 entry per line)
