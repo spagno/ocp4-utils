@@ -48,4 +48,4 @@ do
   base64 -w0 configFiles/${server}.ign > configFiles/${server}.64
   rm -fr configFiles/${server}.ign.tmp
 done < ${MAP_FILE}
-#rm -fr fake-root*
+rm -fr fake-root*
