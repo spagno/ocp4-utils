@@ -1,5 +1,6 @@
 TEMPLATE="./templates/append-template.ign"
 INTERFACE_TEMPLATE="./templates/ifcfg-template"
+NTP_TEMPLATE="./templates/chrony.conf"
 URL_IGNITION_FILES="http://example.com/ocp"
 MAP_FILE="servers.txt"
 FILE_TRANSPILE="https://raw.githubusercontent.com/ashcrow/filetranspiler/master/filetranspile"
