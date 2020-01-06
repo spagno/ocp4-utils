@@ -1,1 +1,1 @@
-serverRole:serverName:serverIP:serverNetMask:serverGateway:serverDNS1,...,serverDNS3:ntp:interface:ifcfg-template-file:append-template-file
+serverRole:serverName:serverIP:serverNetMask:serverGateway:serverHostname:serverDNS1,...,serverDNS3:ntp:interface:ifcfg-template-file:append-template-file

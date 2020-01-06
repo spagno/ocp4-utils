@@ -11,7 +11,7 @@ if [ ! -e filetranspile ]; then
   chmod +x ./filetranspile
 fi
 IFS=:
-while read serverType server ip prefix gateway dns ntp interface if_template template
+while read serverType server ip prefix gateway hostname dns ntp interface if_template template
 do
   TEMPLATE=${ORIGINAL_TEMPLATE}
   INTERFACE_TEMPLATE=${ORIGINAL_IF_TEMPLATE}
@@ -43,6 +43,9 @@ do
   if [ ! -z $ntp ]; then
     cp $NTP_TEMPLATE ./fake-root-${server}/etc/chrony.conf
     sed -e "s/NTP_SERVER/${ntp}/g" -i ./fake-root-${server}/etc/chrony.conf
+  fi
+  if [ ! -z $hostname ]; then
+    echo ${hostname} > ./fake-root-${server}/etc/hostname
   fi
   ./filetranspile -i configFiles/${server}.ign.tmp -f ./fake-root-${server} > configFiles/${server}.ign
   base64 -w0 configFiles/${server}.ign > configFiles/${server}.64
