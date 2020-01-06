@@ -13,23 +13,27 @@ Prepare the servers.txt file (1 entry per line)
 ```
 Or if you want to specify a hostname
 ```bash
-# echo "bootstrap:bootstrap:192.0.2.10:24:192.0.2.1:bootstrap.example.com:time.ien.it:ens192::" > servers.txt
+# echo "bootstrap:bootstrap:192.0.2.10:24:192.0.2.1:bootstrap.example.com:::ens192::" > servers.txt
+```
+Or if you want to specify a dns server (or multiple servers with comma)
+```bash
+# echo "bootstrap:bootstrap:192.0.2.10:24:192.0.2.1::192.0.2.100,192.0.2.101::ens192::" > servers.txt
 ```
 Or if you want to specify a ntp server
 ```bash
-# echo "bootstrap:bootstrap:192.0.2.10:24:192.0.2.1::time.ien.it:ens192::" > servers.txt
+# echo "bootstrap:bootstrap:192.0.2.10:24:192.0.2.1:::time.ien.it:ens192::" > servers.txt
 ```
 Or if you want to specify different if_template
 ```bash
-# echo "bootstrap:bootstrap:192.0.2.10:24:192.0.2.1:::ens192:ifcfg-template-new:" > servers.txt
+# echo "bootstrap:bootstrap:192.0.2.10:24:192.0.2.1::::ens192:ifcfg-template-new:" > servers.txt
 ```
 Or if you want to specify different append-template
 ```bash
-# echo "bootstrap:bootstrap:192.0.2.10:24:192.0.2.1:::ens192::append-template-new" > servers.txt
+# echo "bootstrap:bootstrap:192.0.2.10:24:192.0.2.1::::ens192::append-template-new" > servers.txt
 ```
 Or if you want to specify both
 ```bash
-# echo "bootstrap:bootstrap:192.0.2.10:24:192.0.2.1:::ens192:ifcfg-template-new:append-template-new" > servers.txt
+# echo "bootstrap:bootstrap:192.0.2.10:24:192.0.2.1::::ens192:ifcfg-template-new:append-template-new" > servers.txt
 ```
 Run the script
 ```bash
