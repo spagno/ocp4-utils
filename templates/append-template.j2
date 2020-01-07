@@ -1,0 +1,17 @@
+{
+  "ignition": {
+    "config": {
+      "append": [
+        {
+          "source": "{{ url_ignition_file }}/{{ role }}.ign", 
+          "verification": {}
+        }
+      ]
+    },
+    "timeouts": {},
+    "version": "2.2.0"
+  },
+  "networkd": {},
+  "passwd": {},
+  "systemd": {}
+}
