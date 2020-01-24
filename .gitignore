@@ -1,3 +1,4 @@
-configFiles/
-servers.txt
-filetranspile
+data.yaml
+.vscode
+configFiles
+filetranspile.py
