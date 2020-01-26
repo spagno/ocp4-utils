@@ -1,6 +1,6 @@
 # OCP 4 Utils
 
-Util script to generate append-files for ignition configuration using [filetranspile](https://github.com/ashcrow/filetranspiler)
+Util script to generate append-files for ignition configuration using [filetranspile](https://github.com/ashcrow/filetranspiler) or modified ISOs with the static IPs embedded
 
 ## Usage
 
@@ -27,18 +27,25 @@ Templates definitions and mtu are optional. In the example.yaml file you'll find
 ```yaml
 ---
 url_ignition_file: https://your.site.example.com/pub/ocp42
+download_url: https://raw.githubusercontent.com/ashcrow/filetranspiler/master/filetranspile
+bios_image: http://your.site.example.com/pub/ocp42/bios/bios.raw.gz
+append_url: http://your.site.example.com/pub/ocp42/append
+iso_file: /path/to/rhcos-x.x.x-arch-installer.iso
 paths:
   generic: "/etc"
   network: "/etc/sysconfig/network-scripts"
   ntp: "/etc"
   configs: "/configFiles"
+  isos: "/isos"
 nodes:
 - hostname: bootstrap.example.com
   role: bootstrap
+  install_device: sda
+  create_iso: false
   interfaces:
   - name: ens192
     ip: 192.0.2.28
-    netmask: 24
+    cidr: 24
     gateway: 192.0.2.254
     dns:
     - 192.0.2.13
@@ -47,12 +54,15 @@ nodes:
   templateIF: ifcfg-template.j2
   templateChrony: chrony.conf.j2
   templateAppend: append-template.j2
+  templateIsolinux: isolinux.cfg.j2
 - hostname: master01.example.com
   role: master
+  install_device: sda
+  create_iso: false
   interfaces:
   - name: ens192
     ip: 192.0.2.29
-    netmask: 24
+    cidr: 24
     gateway: 192.0.2.254
     dns:
     - 192.0.2.13
@@ -61,12 +71,15 @@ nodes:
   templateIF: ifcfg-template.j2
   templateChrony: chrony.conf.j2
   templateAppend: append-template.j2
+  templateIsolinux: isolinux.cfg.j2
 - hostname: worker01.example.com
   role: worker
+  install_device: sda
+  create_iso: true
   interfaces:
   - name: ens192
     ip: 192.0.2.30
-    netmask: 24
+    cidr: 24
     gateway: 192.0.2.254
     dns:
     - 192.0.2.13
@@ -75,6 +88,7 @@ nodes:
   templateIF: ifcfg-template.j2
   templateChrony: chrony.conf.j2
   templateAppend: append-template.j2
+  templateIsolinux: isolinux.cfg.j2
 ```
 
 Run the script
@@ -89,3 +103,12 @@ The directory 'configFiles' will be created with the ignition files in plain tex
 # ls configFiles
 bootstrap.example.com  bootstrap.example.com.64 master01.example.com master01.example.com.64 worker01.example.com worker01.example.com.64
 ```
+
+If **create_iso=true** is configured, the directory 'isos' will be created with the isos for the selected node
+
+```bash
+# ls isos
+worker01.example.com.iso
+```
+
+**In case of multiple interfaces, the iso will use the first interface configured in the data.yaml file**

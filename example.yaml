@@ -1,18 +1,24 @@
 ---
 url_ignition_file: https://your.site.example.com/pub/ocp42
 download_url: https://raw.githubusercontent.com/ashcrow/filetranspiler/master/filetranspile
+bios_image: http://your.site.example.com/pub/ocp42/bios/bios.raw.gz
+append_url: http://your.site.example.com/pub/ocp42/append
+iso_file: /path/to/rhcos-x.x.x-arch-installer.iso
 paths:
   generic: "/etc"
   network: "/etc/sysconfig/network-scripts"
   ntp: "/etc"
   configs: "/configFiles"
+  isos: "/isos"
 nodes:
 - hostname: bootstrap.example.com
   role: bootstrap
+  install_device: sda
+  create_iso: false
   interfaces:
   - name: ens192
     ip: 192.0.2.28
-    netmask: 24
+    cidr: 24
     gateway: 192.0.2.254
     dns:
     - 192.0.2.13
@@ -21,12 +27,15 @@ nodes:
   templateIF: ifcfg-template.j2
   templateChrony: chrony.conf.j2
   templateAppend: append-template.j2
+  templateIsolinux: isolinux.cfg.j2
 - hostname: master01.example.com
   role: master
+  install_device: sda
+  create_iso: false
   interfaces:
   - name: ens192
     ip: 192.0.2.29
-    netmask: 24
+    cidr: 24
     gateway: 192.0.2.254
     dns:
     - 192.0.2.13
@@ -35,12 +44,15 @@ nodes:
   templateIF: ifcfg-template.j2
   templateChrony: chrony.conf.j2
   templateAppend: append-template.j2
+  templateIsolinux: isolinux.cfg.j2
 - hostname: worker01.example.com
   role: worker
+  install_device: sda
+  create_iso: false
   interfaces:
   - name: ens192
     ip: 192.0.2.30
-    netmask: 24
+    cidr: 24
     gateway: 192.0.2.254
     dns:
     - 192.0.2.13
@@ -49,3 +61,4 @@ nodes:
   templateIF: ifcfg-template.j2
   templateChrony: chrony.conf.j2
   templateAppend: append-template.j2
+  templateIsolinux: isolinux.cfg.j2

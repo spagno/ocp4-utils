@@ -4,7 +4,7 @@ NAME={{ name }}
 DEVICE={{ name }}
 ONBOOT=yes
 IPADDR={{ ip }}
-PREFIX={{ netmask }}
+PREFIX={{ cidr }}
 {% if gateway -%}
 GATEWAY={{ gateway }}
 {% endif -%}

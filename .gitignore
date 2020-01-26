@@ -2,3 +2,5 @@ data.yaml
 .vscode
 configFiles
 filetranspile.py
+isos
+*.iso

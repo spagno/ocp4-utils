@@ -7,13 +7,22 @@ import subprocess
 import shutil
 import base64
 import requests
+import ipaddress
 
 from jinja2 import Environment, FileSystemLoader
+
+try:
+    from cStringIO import StringIO as BytesIO
+except ImportError:
+    from io import BytesIO
+
+import pycdlib
 
 DEFAULT_TEMPLATES = {
     "templateChrony": "chrony.conf.j2",
     "templateIF": "ifcfg-template.j2",
     "templateAppend": "append-template.j2",
+    "templateIsolinux": "isolinux.cfg.j2",
 }
 FILETRANSPILE_BIN = os.getcwd() + "/filetranspile.py"
 
@@ -40,9 +49,13 @@ def GetData(data_file):
     return data
 
 
-def PrintTemplate(template, data, file):
+def SaveTemplate(template, data, file):
     with open(file, "w") as file_dest:
         file_dest.write(template.render(data))
+
+
+def PrintTemplate(template, data):
+    return template.render(data)
 
 
 def CreateTempDir():
@@ -76,20 +89,20 @@ def CreateHostnameFile(path, hostname):
 
 def CreateChronyFile(path, template_jinja, node):
     CreateDir(path)
-    PrintTemplate(template_jinja, node, path + "/chrony.conf")
+    SaveTemplate(template_jinja, node, path + "/chrony.conf")
 
 
 def CreateAppendFileTemp(template_jinja, node, append_file_tmp):
     path = os.path.dirname(append_file_tmp)
     CreateDir(path)
-    PrintTemplate(template_jinja, node, append_file_tmp)
+    SaveTemplate(template_jinja, node, append_file_tmp)
 
 
 def CreateNetworkFiles(path, template, env, node):
     CreateDir(path)
     for interface in node["interfaces"]:
         template_jinja = CheckTemplate(interface, template, env)
-        PrintTemplate(
+        SaveTemplate(
             template_jinja, interface, path + "/ifcfg-" + interface["name"]
         )
 
@@ -148,9 +161,63 @@ def main():
             if template == "templateChrony":
                 path = tmppath + data["paths"]["ntp"]
                 CreateChronyFile(path, template_jinja, node)
-            elif template == "templateIF":
+            elif (
+                template == "templateIF"
+                and "interfaces" in node
+                and "create_iso" in node
+                and not node["create_iso"]
+            ):
                 path = tmppath + data["paths"]["network"]
                 CreateNetworkFiles(path, template, env, node)
+            elif (
+                template == "templateIsolinux"
+                and "interfaces" in node
+                and "create_iso" in node
+                and node["create_iso"]
+            ):
+                iso_path = os.getcwd() + data["paths"]["isos"]
+                iso_file = iso_path + "/" + node["hostname"] + ".iso"
+                CreateGenericPath(iso_path)
+                shutil.copyfile(data["iso_file"], iso_file)
+                iso = pycdlib.PyCdlib()
+                iso.open(iso_file, "rb+")
+                interface_data = node["interfaces"][0]
+                mtu = "none"
+                if "mtu" in interface_data:
+                    mtu = interface_data["mtu"]
+                ip_string = "ip=%s::%s:%s:%s:%s:%s" % (
+                    interface_data["ip"],
+                    interface_data["gateway"],
+                    ipaddress.ip_network(
+                        interface_data["ip"]
+                        + "/"
+                        + str(interface_data["cidr"]),
+                        False,
+                    ).netmask.__str__(),
+                    node["hostname"],
+                    interface_data["name"],
+                    str(mtu)
+                )
+                configuration = {}
+                configuration.update(
+                    {
+                        "ip_string": ip_string,
+                        "dns": ",".join(interface_data["dns"]),
+                        "install_device": node["install_device"],
+                        "bios_image": data["bios_image"],
+                        "append_url": data["append_url"]
+                        + "/"
+                        + node["hostname"],
+                    }
+                )
+                template_data = PrintTemplate(template_jinja, configuration)
+                iso.modify_file_in_place(
+                    BytesIO(template_data.encode()),
+                    len(template_data.encode()),
+                    "/ISOLINUX/ISOLINUX.CFG;1",
+                )
+                iso.write_fp(BytesIO())
+                iso.close()
             elif template == "templateAppend":
                 CreateAppendFileTemp(template_jinja, node, append_file_tmp)
 
