@@ -196,7 +196,7 @@ def main():
                     ).netmask.__str__(),
                     node["hostname"],
                     interface_data["name"],
-                    str(mtu)
+                    str(mtu),
                 )
                 configuration = {}
                 configuration.update(
