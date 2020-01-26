@@ -140,6 +140,48 @@ def DeleteAppendFileTemp(append_file_tmp):
     os.remove(append_file_tmp)
 
 
+def CreateISO(template_jinja, data, node):
+    iso_path = os.getcwd() + data["paths"]["isos"]
+    iso_file = iso_path + "/" + node["hostname"] + ".iso"
+    CreateGenericPath(iso_path)
+    shutil.copyfile(data["iso_file"], iso_file)
+    iso = pycdlib.PyCdlib()
+    iso.open(iso_file, "rb+")
+    interface_data = node["interfaces"][0]
+    if "mtu" in interface_data:
+        mtu = interface_data["mtu"]
+    else:
+        mtu = "none"
+    ip_string = "ip=%s::%s:%s:%s:%s:%s" % (
+        interface_data["ip"],
+        interface_data["gateway"],
+        ipaddress.ip_network(
+            interface_data["ip"] + "/" + str(interface_data["cidr"]), False,
+        ).netmask.__str__(),
+        node["hostname"],
+        interface_data["name"],
+        str(mtu),
+    )
+    configuration = {}
+    configuration.update(
+        {
+            "ip_string": ip_string,
+            "dns": ",".join(interface_data["dns"]),
+            "install_device": node["install_device"],
+            "bios_image": data["bios_image"],
+            "append_url": data["append_url"] + "/" + node["hostname"],
+        }
+    )
+    template_data = PrintTemplate(template_jinja, configuration)
+    iso.modify_file_in_place(
+        BytesIO(template_data.encode()),
+        len(template_data.encode()),
+        "/ISOLINUX/ISOLINUX.CFG;1",
+    )
+    iso.write_fp(BytesIO())
+    iso.close()
+
+
 def main():
     data = GetData("data.yaml")
     GetFileTranspile(data["download_url"])
@@ -175,49 +217,7 @@ def main():
                 and "create_iso" in node
                 and node["create_iso"]
             ):
-                iso_path = os.getcwd() + data["paths"]["isos"]
-                iso_file = iso_path + "/" + node["hostname"] + ".iso"
-                CreateGenericPath(iso_path)
-                shutil.copyfile(data["iso_file"], iso_file)
-                iso = pycdlib.PyCdlib()
-                iso.open(iso_file, "rb+")
-                interface_data = node["interfaces"][0]
-                mtu = "none"
-                if "mtu" in interface_data:
-                    mtu = interface_data["mtu"]
-                ip_string = "ip=%s::%s:%s:%s:%s:%s" % (
-                    interface_data["ip"],
-                    interface_data["gateway"],
-                    ipaddress.ip_network(
-                        interface_data["ip"]
-                        + "/"
-                        + str(interface_data["cidr"]),
-                        False,
-                    ).netmask.__str__(),
-                    node["hostname"],
-                    interface_data["name"],
-                    str(mtu),
-                )
-                configuration = {}
-                configuration.update(
-                    {
-                        "ip_string": ip_string,
-                        "dns": ",".join(interface_data["dns"]),
-                        "install_device": node["install_device"],
-                        "bios_image": data["bios_image"],
-                        "append_url": data["append_url"]
-                        + "/"
-                        + node["hostname"],
-                    }
-                )
-                template_data = PrintTemplate(template_jinja, configuration)
-                iso.modify_file_in_place(
-                    BytesIO(template_data.encode()),
-                    len(template_data.encode()),
-                    "/ISOLINUX/ISOLINUX.CFG;1",
-                )
-                iso.write_fp(BytesIO())
-                iso.close()
+                CreateISO(template_jinja, data, node)
             elif template == "templateAppend":
                 CreateAppendFileTemp(template_jinja, node, append_file_tmp)
 
