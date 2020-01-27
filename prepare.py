@@ -8,6 +8,7 @@ import shutil
 import base64
 import requests
 import ipaddress
+import copy
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -59,7 +60,7 @@ def PrintTemplate(template, data):
 
 
 def CreateTempDir():
-    return tempfile.mkdtemp()
+    return tempfile.mkdtemp(prefix="prepare-")
 
 
 def CreateDir(path):
@@ -148,11 +149,10 @@ def CreateISO(template_jinja, data, node):
     iso = pycdlib.PyCdlib()
     iso.open(iso_file, "rb+")
     interface_data = node["interfaces"][0]
+    mtu = ""
     if "mtu" in interface_data:
-        mtu = interface_data["mtu"]
-    else:
-        mtu = "none"
-    ip_string = "ip=%s::%s:%s:%s:%s:%s" % (
+        mtu = ":" + str(interface_data["mtu"])
+    ip_string = "ip=%s::%s:%s:%s:%s:none%s" % (
         interface_data["ip"],
         interface_data["gateway"],
         ipaddress.ip_network(
@@ -166,7 +166,7 @@ def CreateISO(template_jinja, data, node):
     configuration.update(
         {
             "ip_string": ip_string,
-            "dns": ",".join(interface_data["dns"]),
+            "dns": interface_data["dns"],
             "install_device": node["install_device"],
             "bios_image": data["bios_image"],
             "append_url": data["append_url"] + "/" + node["hostname"],
@@ -200,22 +200,24 @@ def main():
         )
         for template in DEFAULT_TEMPLATES:
             template_jinja = CheckTemplate(node, template, env)
+            node_temp = node_temp = copy.deepcopy(node)
             if template == "templateChrony":
                 path = tmppath + data["paths"]["ntp"]
                 CreateChronyFile(path, template_jinja, node)
-            elif (
-                template == "templateIF"
-                and "interfaces" in node
-                and "create_iso" in node
-                and not node["create_iso"]
-            ):
+            elif template == "templateIF" and "interfaces" in node:
+                if (
+                    "create_iso" in node
+                    and node["create_iso"] is True
+                    and len(node["interfaces"]) > 1
+                ):
+                    node_temp["interfaces"].pop(0)
                 path = tmppath + data["paths"]["network"]
-                CreateNetworkFiles(path, template, env, node)
+                CreateNetworkFiles(path, template, env, node_temp)
             elif (
                 template == "templateIsolinux"
                 and "interfaces" in node
                 and "create_iso" in node
-                and node["create_iso"]
+                and node["create_iso"] is True
             ):
                 CreateISO(template_jinja, data, node)
             elif template == "templateAppend":

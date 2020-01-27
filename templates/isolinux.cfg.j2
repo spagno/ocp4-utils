@@ -62,7 +62,7 @@ menu separator # insert an empty line
 label linux
   menu label ^Install RHEL CoreOS
   kernel /images/vmlinuz
-  append initrd=/images/initramfs.img nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev={{ install_device }} coreos.inst.image_url={{ bios_image }} coreos.inst.ignition_url={{ append_url }} {{ ip_string }} nameserver={{ dns }}
+  append initrd=/images/initramfs.img nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev={{ install_device }} coreos.inst.image_url={{ bios_image }} coreos.inst.ignition_url={{ append_url }} {{ ip_string }} {% for dnsServer in dns -%}nameserver={{ dnsServer }} {% endfor %}
 
 menu separator # insert an empty line
 
