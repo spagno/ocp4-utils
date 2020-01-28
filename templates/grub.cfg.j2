@@ -1,0 +1,24 @@
+set default="1"
+
+function load_video {
+  insmod efi_gop
+  insmod efi_uga
+  insmod video_bochs
+  insmod video_cirrus
+  insmod all_video
+}
+
+load_video
+set gfxpayload=keep
+insmod gzio
+insmod part_gpt
+insmod ext2
+
+set timeout=5
+### END /etc/grub.d/00_header ###
+
+### BEGIN /etc/grub.d/10_linux ###
+menuentry 'Install RHEL CoreOS' --class fedora --class gnu-linux --class gnu --class os {
+	linux /images/vmlinuz nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev={{ install_device }} coreos.inst.image_url={{ bios_image }} coreos.inst.ignition_url={{ append_url }} {{ ip_string }} {% for dnsServer in dns -%}nameserver={{ dnsServer }} {% endfor %}
+	initrd /images/initramfs.img
+}

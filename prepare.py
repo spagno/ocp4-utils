@@ -24,6 +24,7 @@ DEFAULT_TEMPLATES = {
     "templateIF": "ifcfg-template.j2",
     "templateAppend": "append-template.j2",
     "templateIsolinux": "isolinux.cfg.j2",
+    "templateEFI": "grub.cfg.j2",
 }
 FILETRANSPILE_BIN = os.getcwd() + "/filetranspile.py"
 
@@ -141,7 +142,7 @@ def DeleteAppendFileTemp(append_file_tmp):
     os.remove(append_file_tmp)
 
 
-def CreateISO(template_jinja, data, node):
+def CreateISO(data, node, file_to_write):
     iso_path = os.getcwd() + data["paths"]["isos"]
     iso_file = iso_path + "/" + node["hostname"] + ".iso"
     CreateGenericPath(iso_path)
@@ -172,12 +173,24 @@ def CreateISO(template_jinja, data, node):
             "append_url": data["append_url"] + "/" + node["hostname"],
         }
     )
-    template_data = PrintTemplate(template_jinja, configuration)
-    iso.modify_file_in_place(
-        BytesIO(template_data.encode()),
-        len(template_data.encode()),
-        "/ISOLINUX/ISOLINUX.CFG;1",
-    )
+    if "templateIsolinux" in file_to_write:
+        template_data = PrintTemplate(
+            file_to_write["templateIsolinux"], configuration
+        )
+        iso.modify_file_in_place(
+            BytesIO(template_data.encode()),
+            len(template_data.encode()),
+            "/ISOLINUX/ISOLINUX.CFG;1",
+        )
+    if "templateEFI" in file_to_write:
+        template_data = PrintTemplate(
+            file_to_write["templateEFI"], configuration
+        )
+        iso.modify_file_in_place(
+            BytesIO(template_data.encode()),
+            len(template_data.encode()),
+            "/EFI/REDHAT/GRUB.CFG;1",
+        )
     iso.write_fp(BytesIO())
     iso.close()
 
@@ -198,6 +211,7 @@ def main():
         CreateHostnameFile(
             tmppath + data["paths"]["generic"], node["hostname"]
         )
+        file_to_write = {}
         for template in DEFAULT_TEMPLATES:
             template_jinja = CheckTemplate(node, template, env)
             node_temp = node_temp = copy.deepcopy(node)
@@ -213,16 +227,16 @@ def main():
                     node_temp["interfaces"].pop(0)
                 path = tmppath + data["paths"]["network"]
                 CreateNetworkFiles(path, template, env, node_temp)
-            elif (
-                template == "templateIsolinux"
-                and "interfaces" in node
-                and "create_iso" in node
-                and node["create_iso"] is True
-            ):
-                CreateISO(template_jinja, data, node)
+            elif template == "templateIsolinux" or template == "templateEFI":
+                if (
+                    "interfaces" in node
+                    and "create_iso" in node
+                    and node["create_iso"] is True
+                ):
+                    file_to_write.update({template: template_jinja})
             elif template == "templateAppend":
                 CreateAppendFileTemp(template_jinja, node, append_file_tmp)
-
+        CreateISO(data, node, file_to_write)
         CreateAppendFile(tmppath, append_file_tmp, append_file)
         CreateBase64EncodedAppendFile(append_file)
         DeleteTempDir(tmppath)
