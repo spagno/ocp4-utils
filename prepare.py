@@ -8,7 +8,6 @@ import shutil
 import base64
 import requests
 import ipaddress
-import copy
 
 from jinja2 import Environment, FileSystemLoader
 
