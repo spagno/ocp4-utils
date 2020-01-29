@@ -167,11 +167,12 @@ def CreateISO(data, node, file_to_write):
             interface_data["ip"],
             gateway,
             ipaddress.ip_network(
-                interface_data["ip"] + "/" + str(interface_data["cidr"]), False,
+                interface_data["ip"] + "/" + str(interface_data["cidr"]),
+                False,
             ).netmask.__str__(),
             hostname,
             interface_data["name"],
-            mtu
+            mtu,
         )
         ip_strings.append(ip_string)
     configuration = {}
