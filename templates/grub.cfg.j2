@@ -19,6 +19,6 @@ set timeout=5
 
 ### BEGIN /etc/grub.d/10_linux ###
 menuentry 'Install RHEL CoreOS' --class fedora --class gnu-linux --class gnu --class os {
-	linux /images/vmlinuz nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev={{ install_device }} coreos.inst.image_url={{ bios_image }} coreos.inst.ignition_url={{ append_url }} {{ ip_string }} {% for dnsServer in dns -%}nameserver={{ dnsServer }} {% endfor %}
+	linux /images/vmlinuz nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev={{ install_device }} coreos.inst.image_url={{ bios_image }} coreos.inst.ignition_url={{ append_url }} {% for ip_string in ip_strings -%}{{ ip_string }} {% endfor %} {% for dnsServer in dns -%}nameserver={{ dnsServer }} {% endfor %}
 	initrd /images/initramfs.img
 }

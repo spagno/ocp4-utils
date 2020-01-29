@@ -149,25 +149,36 @@ def CreateISO(data, node, file_to_write):
     shutil.copyfile(data["iso_file"], iso_file)
     iso = pycdlib.PyCdlib()
     iso.open(iso_file, "rb+")
-    interface_data = node["interfaces"][0]
-    mtu = ""
-    if "mtu" in interface_data:
-        mtu = ":" + str(interface_data["mtu"])
-    ip_string = "ip=%s::%s:%s:%s:%s:none%s" % (
-        interface_data["ip"],
-        interface_data["gateway"],
-        ipaddress.ip_network(
-            interface_data["ip"] + "/" + str(interface_data["cidr"]), False,
-        ).netmask.__str__(),
-        node["hostname"],
-        interface_data["name"],
-        str(mtu),
-    )
+    ip_strings = list()
+    nameservers = list()
+    for interface_data in node["interfaces"]:
+        mtu = ""
+        gateway = ""
+        hostname = ""
+        if "mtu" in interface_data:
+            mtu = ":" + str(interface_data["mtu"])
+        if "gateway" in interface_data:
+            gateway = interface_data["gateway"]
+        if len(ip_strings) == 0:
+            hostname = node["hostname"]
+        if "dns" in interface_data:
+            nameservers.extend(interface_data["dns"])
+        ip_string = "ip=%s::%s:%s:%s:%s:none%s" % (
+            interface_data["ip"],
+            gateway,
+            ipaddress.ip_network(
+                interface_data["ip"] + "/" + str(interface_data["cidr"]), False,
+            ).netmask.__str__(),
+            hostname,
+            interface_data["name"],
+            mtu
+        )
+        ip_strings.append(ip_string)
     configuration = {}
     configuration.update(
         {
-            "ip_string": ip_string,
-            "dns": interface_data["dns"],
+            "ip_strings": ip_strings,
+            "dns": nameservers,
             "install_device": node["install_device"],
             "bios_image": data["bios_image"],
             "append_url": data["append_url"] + "/" + node["hostname"],
@@ -214,19 +225,16 @@ def main():
         file_to_write = {}
         for template in DEFAULT_TEMPLATES:
             template_jinja = CheckTemplate(node, template, env)
-            node_temp = node_temp = copy.deepcopy(node)
             if template == "templateChrony":
                 path = tmppath + data["paths"]["ntp"]
                 CreateChronyFile(path, template_jinja, node)
-            elif template == "templateIF" and "interfaces" in node:
-                if (
-                    "create_iso" in node
-                    and node["create_iso"] is True
-                    and len(node["interfaces"]) > 1
-                ):
-                    node_temp["interfaces"].pop(0)
-                path = tmppath + data["paths"]["network"]
-                CreateNetworkFiles(path, template, env, node_temp)
+            elif (
+                template == "templateIF"
+                and "interfaces" in node
+                and "create_iso" in node
+                and not node["create_iso"]
+            ):
+                CreateNetworkFiles(path, template, env, node)
             elif template == "templateIsolinux" or template == "templateEFI":
                 if (
                     "interfaces" in node
@@ -236,7 +244,8 @@ def main():
                     file_to_write.update({template: template_jinja})
             elif template == "templateAppend":
                 CreateAppendFileTemp(template_jinja, node, append_file_tmp)
-        CreateISO(data, node, file_to_write)
+        if file_to_write:
+            CreateISO(data, node, file_to_write)
         CreateAppendFile(tmppath, append_file_tmp, append_file)
         CreateBase64EncodedAppendFile(append_file)
         DeleteTempDir(tmppath)

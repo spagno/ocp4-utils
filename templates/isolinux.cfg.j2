@@ -1,6 +1,3 @@
-# Note this file mostly matches the isolinux.cfg file from the Fedora 
-# Server DVD iso. Diff this file with that file in the future to pick up
-# changes.
 serial 0
 default linux
 timeout 5
@@ -62,7 +59,7 @@ menu separator # insert an empty line
 label linux
   menu label ^Install RHEL CoreOS
   kernel /images/vmlinuz
-  append initrd=/images/initramfs.img nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev={{ install_device }} coreos.inst.image_url={{ bios_image }} coreos.inst.ignition_url={{ append_url }} {{ ip_string }} {% for dnsServer in dns -%}nameserver={{ dnsServer }} {% endfor %}
+  append initrd=/images/initramfs.img nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev={{ install_device }} coreos.inst.image_url={{ bios_image }} coreos.inst.ignition_url={{ append_url }} {% for ip_string in ip_strings -%}{{ ip_string }} {% endfor %} {% for dnsServer in dns -%}nameserver={{ dnsServer }} {% endfor %}
 
 menu separator # insert an empty line
 
