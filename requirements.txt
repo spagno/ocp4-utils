@@ -17,7 +17,7 @@ pathspec==0.7.0
 pycdlib==1.9.0
 pycodestyle==2.5.0
 pyflakes==2.1.1
-PyYAML==5.3
+PyYAML==5.4
 regex==2020.1.7
 requests==2.22.0
 six==1.13.0
